@@ -236,13 +236,13 @@ repeated; the competition tasks (Python 3.13) were unaffected.
 
 ## 10. Reproducibility and resource
 
-Pre-registrations, frozen parameters, per-task outputs and analysis scripts are in the repository; one Kaggle CPU
+Pre-registrations, frozen parameters, per-task outputs and analysis scripts are at github.com/shivansh193/execgraph; one Kaggle CPU
 notebook regenerates every localisation number. ExecGraph-129 holds per-task runtime edges and test coverage on
 competition node ids, missed-edge causes, gold labels and rankings, keyed by public upstream commits; it contains no
 competition files.
 
 ## References
 
-Abreu et al. 2007 (Ochiai); Zhang et al., ISSTA 2017 (PRFL); Xia et al. 2024 (Agentless); Chen et al., ACL 2025
-(LocAgent); Yu et al., ICML 2025 (OrcaLoca); Jiang et al. 2025 (CoSIL); Haveliwala, WWW 2002 (personalised PageRank);
+Abreu et al. 2007 (Ochiai); Zhang et al., ISSTA 2017 (PRFL); Xia et al., FSE 2025 (Agentless); Chen et al., ACL 2025
+(LocAgent); Yu et al., ICML 2025 (OrcaLoca); Jiang et al., ASE 2025 (CoSIL); Haveliwala, WWW 2002 (personalised PageRank);
 Gutierrez et al., NeurIPS 2024 (HippoRAG); Ke et al., NeurIPS 2017 (LightGBM); Jimenez et al., ICLR 2024 (SWE-bench).
