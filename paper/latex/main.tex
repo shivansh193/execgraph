@@ -1,0 +1,375 @@
+\documentclass[10pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage[numbers,sort&compress]{natbib}
+\hypersetup{colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black}
+
+% Results not yet in (SWE-bench Verified generality check): shown in red so nothing unfinished ships unnoticed.
+\newcommand{\pending}[1]{\textcolor{red}{[#1]}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{Half the Calls Are Missing: Runtime Call Graphs, Test Evidence\\and Bug Localisation for Small Coding Agents}
+\author{Shivansh Kalra}
+\date{Gemma 4 Developer Agent: Paper Track}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+The Gemma 4 Developer Agent competition ships each repository with a static code graph so that agents built on small
+models can find where a bug lives. We measure what that graph misses and what runtime evidence adds. Tracing the tests
+of 129 tasks in the scorer's own environment, we find that the competition graph contains 23\% of the 42{,}024
+repo-to-repo call edges that execute, and an independent AST analysis with name resolution 49\%. The missing half is
+properties, dunder protocols and calls on receivers of unknown type. We then rank functions with a personalised
+PageRank walk over static, AST, runtime and embedding edges, seeded by the issue text and the failing test (RWG-PPR).
+In a pre-registered evaluation (40 tuning / 89 held-out tasks), with the task's failing tests RWG-PPR puts an edited
+function in its top~5 for 64\% of held-out tasks, against 41\% for issue text, 37\% for PRFL and 30\% for Ochiai. A
+same-information ablation shows the gain comes from fusing issue text with the failing-test spectrum, not from the
+walk; a revised ranker that also reads the failure's own text reaches 77\%, and a learned ranker loses 6 points when
+its graph features are removed. Without a failing test, nothing beats issue text. The E4B agent's own reproduction
+tests fail on the buggy code only 49\% of the time, but when they do, localisation improves from 58\% to 71\%. Ranking
+the existing tests by what they execute finds one that runs the buggy function in the top~3 for 80\% of tasks (67\% by
+test name), a template for that reproduction. Finally, giving Gemma~4 31B a correct location in the prompt did not
+change its fix rate (12 of 32 tasks either way): for a capable agent, localisation is not the bottleneck. On 192
+SWE-bench Verified tasks from 10 further repositories, with parameters frozen, the findings replicate: static analysis
+sees 42\% of executed calls, RWG-PPR reaches 62\% hit@5 against 47\% for text and 29\% for PRFL, and text fused with
+PRFL matches it.
+\end{abstract}
+
+\section{Introduction}
+
+The competition gives every agent a static code graph to find where a bug lives, and public notebooks report that graph
+tools rarely return anything useful. We ask why, what would, and whether a better location helps an agent.
+
+Spectrum-based fault localisation (Ochiai~\cite{abreu2007ochiai}; PRFL~\cite{zhang2017prfl}, which runs PageRank over
+the executed call graph) uses test coverage but ignores the issue. LLM localisation over static graphs
+(Agentless~\cite{xia2024agentless}, LocAgent~\cite{chen2025locagent}, OrcaLoca~\cite{yu2025orcaloca},
+CoSIL~\cite{jiang2025cosil}) uses the issue and a static graph but no execution. Nobody, to our knowledge, has measured
+how much of the executed call graph a static code graph contains, or fused the issue, static edges and executed edges
+in one ranking on a shared graph format.
+
+\paragraph{Contributions.} (1)~A measurement of static-graph blind spots: half of executed calls are invisible to two
+independent static graphs, in 13 classified causes. (2)~RWG-PPR, an issue-seeded personalised PageRank over static, AST,
+runtime and embedding edges on the competition's node ids, with a pre-registered held-out evaluation against 10
+baselines. (3)~Same-information ablations that locate the gain. (4)~Where the failing test can come from: the agent's
+own reproductions, and coverage-guided retrieval of existing tests. (5)~A hinted-control study with E4B and 31B, and a
+record of small-model harness failures. (6)~A frozen-parameter replication on 192 SWE-bench Verified tasks from 10
+further repositories. (7)~ExecGraph-129: per-task runtime overlays, missed-edge causes, gold labels and rankings.
+
+\section{Method}
+
+\paragraph{Tracer.} A stdlib-only tracer (\code{sys.monitoring} on Python~3.12+, \code{sys.setprofile} otherwise) runs
+pytest in-process and records, per test, the repository functions executed, every distinct caller-to-callee pair between
+repository functions (walking through library frames to the nearest repository caller), the outcome, and the failing
+traceback with local values. Node ids follow the competition graph's conventions (dotted \code{module.Class.function},
+\code{docs\_src/} stripped), so runtime edges overlay the competition graph directly.
+
+\paragraph{Graph.} One weighted directed graph per task over the competition graph's nodes (4.3k for fastapi). Edges:
+the competition's \code{calls} edges (which also encode containment and inheritance); precise edges from our AST
+analysis (imports and re-exports, constructors via the MRO, \code{self}/\code{super} dispatch, locally typed variables);
+runtime edges from the tracer (weight~3); and $k$-nearest-neighbour edges from the provided embeddings ($k=5$, cosine
+$\ge 0.5$). Each edge has a reverse edge at reduced weight, since the fix can lie upstream or downstream of what a test
+touches.
+
+\paragraph{Seeds and walk.} BM25 of the issue over each node's id tokens and source, plus a bonus for identifiers the
+issue quotes. With test evidence, each seed $s_v$ becomes $(s_v + 0.05)\,(1 + 2\,\mathrm{Ochiai}_v)$ for functions the
+failing tests executed, so a failing path with no textual match still seeds the walk. Personalised
+PageRank~\cite{haveliwala2002topic} (restart 0.3, 50 iterations), as in seeded graph retrieval~\cite{gutierrez2024hipporag};
+final score $0.3\cdot\text{walk} + 0.7\cdot\text{seed}$. Parameters were chosen on the tuning split only.
+
+\paragraph{v2} (designed after the held-out split was scored once with v1, so exploratory): seeds also come from the
+failure's own text (exception message, failing source lines, test names), restricted to executed functions; passing
+tests from nearby files add Ochiai contrast.
+
+\paragraph{Evidence levels.} \textbf{S}: no tests run. \textbf{R}: the 3 existing test files nearest the issue by BM25,
+run on the buggy code. \textbf{F}: the task's own tests after \code{test\_patch}, run on the buggy code: what an agent
+has after writing a faithful failing reproduction. \textbf{A}: the reproduction tests our E4B agent actually wrote.
+\textbf{E1b}: the full existing suite, functions per test.
+
+\section{Setup}
+
+All 129 public tasks (fastapi 67, rich 48, requests 13, httpx 1), run in the scorer's own sandbox and pinned environment
+on Kaggle. Gold: non-test functions the reference patch edits (innermost enclosing definition of each changed line in
+the pre-patch file), restricted to graph nodes; 405 of 444 gold functions are nodes. The pre-registration
+(\code{paper/prereg\_e1.json}, committed before any trace existed) fixes the split, the metric (hit@5 primary),
+hypotheses H1--H4 and the analysis: task-level bootstrap CIs and paired bootstrap tests. Baselines are listed in
+Table~\ref{tab:e1}; \emph{embedding} ranks by cosine to the top text matches, as no query encoder is available offline.
+
+\section{What the static graph misses}
+\label{sec:d1}
+
+Across the 129 tasks the tracer saw 42{,}024 distinct repo-to-repo call edges with both endpoints in the competition
+graph. The competition graph contains 23.2\% of them; our AST graph 49.1\%; their union 50.3\%. We classified each of
+the 20{,}871 edges that neither contains from the caller's AST (Table~\ref{tab:d1}).
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lr}
+\toprule
+Cause of a missed executed edge & Share \\
+\midrule
+Property / descriptor access (\code{obj.size}) & 29.0\% \\
+Dunder protocols (operators, \code{with}, iteration, \code{\_\_getattr\_\_}) & 26.6\% \\
+Method call on a receiver of unknown type & 26.0\% \\
+Implicit constructor (\code{\_\_init\_\_}, \code{\_\_post\_init\_\_}) & 6.0\% \\
+Unresolved name (star or conditional imports) & 3.8\% \\
+Through library code (framework dispatch, validators) & 2.5\% \\
+Callbacks, decorators, reflection, runtime imports & 5.4\% \\
+\bottomrule
+\end{tabular}
+\caption{The 20{,}871 executed call edges that neither static graph contains, by cause.}
+\label{tab:d1}
+\end{table}
+
+Two graphs built independently miss the same edges: the gap is a property of static analysis of Python. A static
+``who calls this?'' is blind to half of execution, and blindest where code is most idiomatic. The same holds on 10
+SWE-bench Verified repositories (Section~\ref{sec:swebench}): 42\% of 340{,}028 executed edges are in the AST graph.
+
+\section{Localisation}
+
+\subsection{Pre-registered results}
+
+Held-out split: 79 tasks with a gold node in the graph, 70 with a failing-test trace (Table~\ref{tab:e1}).
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{llcccc}
+\toprule
+Ranker & Evidence & hit@1 & hit@5 & hit@10 & MRR \\
+\midrule
+Random & -- & 0.00 & 0.03 & 0.04 & 0.02 \\
+BM25 & issue & 0.18 & 0.37 & 0.51 & 0.29 \\
+Text (BM25 + identifiers) & issue & 0.18 & 0.41 & 0.51 & 0.30 \\
+Embedding & issue & 0.01 & 0.09 & 0.11 & 0.06 \\
+Static $k$-hop & issue + graph & 0.18 & 0.39 & 0.52 & 0.29 \\
+RWG-PPR (S) & issue + graph & 0.17 & 0.41 & 0.47 & 0.28 \\
+RWG-PPR (R) & + nearby tests & 0.14 & 0.37 & 0.44 & 0.26 \\
+Crash frames & failing tests & 0.11 & 0.11 & 0.11 & 0.11 \\
+Ochiai & failing tests & 0.09 & 0.30 & 0.41 & 0.20 \\
+PRFL & failing tests & 0.17 & 0.37 & 0.56 & 0.29 \\
+\textbf{RWG-PPR (F)} & \textbf{issue + failing tests} & \textbf{0.37} & \textbf{0.64} & \textbf{0.76} & \textbf{0.50} \\
+\bottomrule
+\end{tabular}
+\caption{Pre-registered held-out results (RWG-PPR v1, frozen parameters).}
+\label{tab:e1}
+\end{table}
+
+H3 holds: RWG-PPR (F) beats Ochiai by $+0.34$ $[+0.23, +0.47]$ and PRFL by $+0.27$ $[+0.14, +0.41]$ hit@5, and issue text
+by $+0.21$ $[+0.10, +0.33]$. H1, H2 and H4 do not: without a failing test, neither the static graph nor traces of nearby
+passing tests add anything to the issue text (RWG-PPR S 0.41 = text 0.41; R 0.37).
+
+\subsection{Where the gain comes from}
+
+Each pre-registered baseline saw less information than RWG-PPR (F), so after scoring we added baselines with the same
+information (issue text plus failing-test spectrum; Table~\ref{tab:same}). With the same information, the walk adds
+nothing measurable to v1, nor do runtime edges (0.63). The gain is the fusion: spectrum methods rank framework code
+every failing test runs (routing, validation) as high as the fix, and the issue text breaks those ties; text alone
+confuses same-named functions in docs examples and the library, and the trace drops those that never ran. The walk has
+little to add because the evidence already contains the answer: a failing test executes a gold function in 60 of 72
+held-out tasks.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lcccc}
+\toprule
+Held-out, $n=70$ & hit@1 & hit@5 & hit@10 & MRR \\
+\midrule
+RWG-PPR v1 (F) & 0.37 & 0.64 & 0.76 & 0.50 \\
+\quad walk off & 0.39 & 0.63 & 0.74 & 0.51 \\
+Text + PRFL, weighted sum (no graph) & 0.33 & 0.64 & 0.76 & 0.47 \\
+\midrule
+RWG-PPR v2 (F) & 0.41 & \textbf{0.77} & 0.84 & 0.55 \\
+\quad without failure-text seeds & 0.37 & 0.66 & 0.74 & 0.50 \\
+\quad without passing-test contrast & 0.40 & 0.71 & 0.84 & 0.54 \\
+\quad walk off & 0.44 & 0.76 & 0.84 & 0.57 \\
+Text + failure text + PRFL (no graph) & 0.37 & 0.71 & 0.86 & 0.51 \\
+\bottomrule
+\end{tabular}
+\caption{Same-information comparisons (added after the held-out split was scored; exploratory).}
+\label{tab:same}
+\end{table}
+
+\subsection{v2 and a learned ranker (exploratory)}
+
+The failing test carries more than coverage: its exception message and failing lines often name the culprit. v2 beats v1
+by $+0.13$ $[+0.04, +0.21]$ hit@5 and its own no-failure-text ablation by $+0.11$ $[+0.03, +0.20]$. Against the
+same-information combination without a graph it gains $+0.06$ $[-0.04, +0.16]$, not significant; the walk alone adds
+$+0.01$.
+
+To ask whether graph structure carries signal that a hand-tuned walk fails to use, we trained a LambdaRank
+model~\cite{ke2017lightgbm} (5-fold cross-validation over the 106 tasks with failing tests) on 22 features in five
+groups: text, failure text, spectrum, graph (walk scores, degrees, hops from seeds and crash frames, embedding
+similarity) and node properties. It reaches 0.80 hit@5 (v2: 0.78). Removing the graph group costs 0.057 hit@5 (95\% CI
+$[0.000, 0.113]$; $P(\text{no loss}) = 0.03$); removing the spectrum group costs nothing, as coverage also enters
+through graph and failure features. Graph structure helps as features for a ranker, not as propagation over evidence
+that already points at the answer.
+
+\section{Where the failing test comes from}
+
+Every gain above needs a failing test. Level F uses the task's own tests, which an agent does not have.
+
+\paragraph{Level A: the agent's own reproductions.} We traced the 53 reproduction tests our E4B agent wrote in four dev
+runs (32 tasks), each alone on the buggy code in the scorer environment. 26 fail (a real reproduction, 49\%); 20 pass,
+so they do not reproduce the bug; 7 do not import. On the 24 failing repros with gold in the graph, RWG-PPR v2 reaches
+0.71 hit@5 against 0.58 for text on the same tasks ($+0.13$ $[0.00, +0.29]$, $P = 0.04$). Where the task also has real
+failing tests, the agent's repro gets 0.81 and the real tests 0.95. A small model's reproduction is good evidence when
+it reproduces; half the time it does not.
+
+\paragraph{Retrieving an existing test by coverage.} An agent without a failing test can start from an existing test
+that runs the buggy code and adapt it: it already has the right imports, fixtures and call path, which is where E4B's
+own repros break. We traced the whole existing suite of 127 tasks on the buggy code (median 53\,s per task; median
+2{,}356 tests per held-out task) and ranked tests using only the issue text. \emph{Coverage} scores a test by the
+issue-relevance of the functions it executes (RWG-PPR level-S scores, weighted by inverse test frequency, normalised by
+the square root of the test's coverage); \emph{names} is BM25 on test ids; \emph{level-R files} takes the tests in level
+R's three BM25-nearest files. test@$k$: a top-$k$ test executes a gold function (Table~\ref{tab:e1b}).
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lccc}
+\toprule
+Held-out, $n=78$ & test@1 & test@3 & test@10 \\
+\midrule
+Random (expected) & 0.24 & 0.41 & 0.62 \\
+Tests in level R's files & 0.32 & 0.38 & 0.46 \\
+BM25 on test names & 0.41 & 0.67 & 0.82 \\
+Coverage & \textbf{0.62} & 0.73 & 0.85 \\
+Coverage + names & 0.59 & \textbf{0.80} & \textbf{0.88} \\
+\bottomrule
+\end{tabular}
+\caption{Retrieving an existing test that runs a gold function, from the issue text alone (exploratory).}
+\label{tab:e1b}
+\end{table}
+
+Ranking tests by what they execute puts a test that runs the buggy function first for 62\% of tasks, against 41\% by
+name; combined with names, in the top~3 for 80\% ($+0.13$ $[+0.04, +0.22]$ over names; $+0.41$ over level R's file
+choice, which explains why level R did not help). The executed call graph is what makes this possible: the static graph
+cannot say which test reaches a function through a property or a dunder method. What does not work is using the
+retrieved tests as pseudo-failing evidence for localisation: hit@5 0.46 against 0.41 for text ($+0.05$
+$[-0.04, +0.15]$). A passing test says where the code runs, not where it is wrong. The retrieved test is a starting point
+for writing a failing one.
+
+\section{Agents}
+
+\paragraph{Hinted control.} The same baseline agent (no skills, 8~minutes / 28 tool calls) on 41 dev tasks, with a hint
+appended to the issue: none; the files the reference patch edits (oracle); RWG-PPR v2 top-5 with the failing tests.
+Paired per task, exact McNemar (\code{paper/prereg\_e3.json}); Table~\ref{tab:e3}.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lccc}
+\toprule
+Model & No hint & Oracle files & RWG-PPR top-5 (F) \\
+\midrule
+Gemma 4 E4B & 2/41 & 5/41 (3:0, $p=0.25$) & not run (GPU quota) \\
+Gemma 4 31B & 14/41 & 16/41 (3:1, $p=0.63$) & 14/41 (2:2, $p=1.0$) \\
+\bottomrule
+\end{tabular}
+\caption{Tasks solved; in brackets, discordant tasks (hint only : no hint only) and exact McNemar $p$.}
+\label{tab:e3}
+\end{table}
+
+The RWG-PPR hint contained a gold function on 32 of the 37 tasks that had one. On those 32 tasks, 31B solved 12 without
+the hint, 12 with it, and 12 with the oracle files. A correct location in the prompt did not change the fix rate where
+it was correct. Without hints, 31B already used a median 27 of its 28 calls and ended 11 tasks with no patch, which
+looked like a search bottleneck; the hint did not shorten that (median 27 calls with the hint, 24 with oracle files), and
+the hinted arms timed out more often (5 and 9 sessions against 3). For this agent and budget, finding the function is
+not what fails; turning a location into a correct edit within budget is. This bounds what any localiser, ours included,
+can add by prompting.
+
+\paragraph{Harness traps.} Over six versions of an E4B agent with a runtime-trace skill, each fix to the harness removed
+one failure class completely, and the fix rate stayed at 3--5/41 (Table~\ref{tab:e4}). For a 4B model, the interface
+between model and tools fails before the reasoning does, and none of these failure classes shows up in a benchmark
+score until it is read from the traces.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{llll}
+\toprule
+Version & Dominant failure & Count & Fix (count after) \\
+\midrule
+v1 & skill name rejected (snake\_case) & 41/41 tasks & kebab-case (0) \\
+v2 & Python-style \code{args=[...]} copied into JSON tool calls & 13 calls & JSON example in prompt (0) \\
+v3--v4 & \code{write\_file} rejects \code{/tmp} paths & 43 writes & repro under \code{tests/} (0) \\
+v5 & skill call typed into the shell & 13 calls & ``it is a tool'' line (leaderboard only) \\
+\bottomrule
+\end{tabular}
+\caption{Harness failure classes of an E4B agent across versions.}
+\label{tab:e4}
+\end{table}
+
+\section{Generality: SWE-bench Verified}
+\label{sec:swebench}
+
+We ran the same protocol inside the official SWE-bench Verified~\cite{jimenez2024swebench} Docker images on every task
+from its pytest-based repositories (194 tasks; Django and SymPy use other test runners): trace three nearby existing
+test files on the buggy code (level R), apply the test patch, trace the FAIL\_TO\_PASS tests (level F). Nothing was
+tuned: v1 and v2 use the parameters frozen on the competition's tuning split. There is no competition graph or
+embedding here, so the graph is our AST graph (all edge kinds, plus class--method containment). 192 tasks have a gold
+function in the graph; 172 have a failing-test trace, and in 153 of those (89\%) a failing test executes a gold
+function.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lccccc}
+\toprule
+Ranker & $n$ & hit@1 & hit@5 & hit@10 & MRR \\
+\midrule
+Text (BM25 + identifiers) & 192 & 0.19 & 0.47 & 0.57 & 0.31 \\
+RWG-PPR (S) & 192 & 0.16 & 0.44 & 0.57 & 0.29 \\
+RWG-PPR (R, pseudo-spectrum) & 182 & 0.11 & 0.34 & 0.41 & 0.22 \\
+Ochiai (F) & 172 & 0.03 & 0.13 & 0.20 & 0.09 \\
+PRFL (F) & 172 & 0.11 & 0.29 & 0.36 & 0.20 \\
+\textbf{RWG-PPR v1 (F)} & 172 & 0.27 & \textbf{0.62} & 0.71 & 0.43 \\
+Text + PRFL, no graph (F) & 172 & 0.30 & 0.62 & 0.72 & 0.44 \\
+RWG-PPR v2 (F) & 172 & 0.32 & \textbf{0.66} & 0.76 & 0.47 \\
+\quad walk off & 172 & 0.34 & 0.67 & 0.77 & 0.48 \\
+Text + failure text + PRFL, no graph (F) & 172 & 0.32 & 0.63 & 0.76 & 0.47 \\
+\bottomrule
+\end{tabular}
+\caption{SWE-bench Verified, 10 pytest repositories, parameters frozen on the competition tuning split.}
+\label{tab:swe}
+\end{table}
+
+Every finding from the competition tasks replicates (Table~\ref{tab:swe}). With the failing tests, RWG-PPR v1 beats
+issue text by $+0.17$ $[+0.09, +0.24]$ hit@5, PRFL by $+0.34$ $[+0.26, +0.42]$ and Ochiai by $+0.49$ $[+0.41, +0.57]$,
+and it beats text in 7 of the 10 repositories (e.g.\ sphinx 0.56 vs 0.22; it loses on pytest, 0.22 vs 0.56, $n=9$). As
+before, the gain is the fusion: text + PRFL with no graph matches v1 ($+0.01$ $[-0.03, +0.04]$), the walk adds nothing
+to v2 ($-0.01$), and v2's failure-text seeds add a non-significant $+0.04$. Without a failing test, nothing beats issue
+text (S $-0.03$; the R pseudo-spectrum $-0.12$). The static blind spot is the same size: our AST graph contains
+42.1\% of the 340{,}028 executed repo-to-repo edges (51.1\% counting name-match edges), from 30\% (astropy) to 65\%
+(scikit-learn, requests). Missed edges are again properties (19.8\%), dunder protocols (18.9\%) and calls on receivers of
+unknown type (16.2\%), followed by dispatch through library code (13.3\%) and inheritance (7.6\%).
+
+The first run of this check recorded methods without their class on Python $<3.11$, which lacks
+\code{co\_qualname}; the tracer now recovers qualified names from the source AST (exact on all 236 functions checked
+against \code{co\_qualname}). The competition tasks run Python 3.13 and were not affected.
+
+\section{Limitations}
+
+\begin{itemize}
+\item The competition tasks come from 4 repositories, 89\% fastapi and rich; Section~\ref{sec:swebench} replicates
+localisation and D1 on 10 more, but all are Python projects with pytest suites. The agent and test-retrieval studies
+were not replicated there.
+\item v2, the learned ranker, level A and test retrieval were designed after the held-out split was scored once; we
+report them as exploratory, with v1 as the confirmatory result.
+\item Gold is function-level; 37 of 79 held-out tasks also edit module-level code, which no function ranking can find.
+\item The agent study has 41 tasks, too few for small effects; the GPU quota ended it before the 12B arms.
+\end{itemize}
+
+\section{Reproducibility and resource}
+
+Pre-registrations, frozen parameters, per-task outputs and analysis scripts are in the repository; one Kaggle CPU
+notebook regenerates every localisation number from the traces. ExecGraph-129 holds, per task, runtime call edges and
+per-test coverage on competition node ids, missed-edge causes, gold labels and all rankings, keyed by the public
+upstream commits. It contains no competition files.
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}

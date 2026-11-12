@@ -1,0 +1,42 @@
+instance_id,repo,resolved,has_patch,tool_calls,error,seconds
+fastapi_11194,fastapi/fastapi,True,True,24,,320.0
+fastapi_13207,fastapi/fastapi,True,True,22,,320.2
+fastapi_13786,fastapi/fastapi,False,True,28,,396.4
+fastapi_14099,fastapi/fastapi,False,True,27,Agent exceeded session timeout (8.0 min),488.2
+fastapi_14262,fastapi/fastapi,False,False,28,,230.8
+fastapi_14301,fastapi/fastapi,True,True,28,,344.2
+fastapi_14349,fastapi/fastapi,True,True,16,,440.3
+fastapi_14371,fastapi/fastapi,False,True,27,,330.0
+fastapi_14430,fastapi/fastapi,True,True,28,,274.1
+fastapi_14458,fastapi/fastapi,True,True,17,,381.0
+fastapi_14479,fastapi/fastapi,False,True,14,,131.0
+fastapi_14487,fastapi/fastapi,False,True,22,,203.2
+fastapi_14583,fastapi/fastapi,False,False,22,Agent exceeded session timeout (8.0 min),484.9
+fastapi_14616,fastapi/fastapi,False,True,28,,277.1
+fastapi_14851,fastapi/fastapi,True,False,28,,190.8
+fastapi_14962,fastapi/fastapi,False,False,20,Agent exceeded session timeout (8.0 min),485.1
+fastapi_14986,fastapi/fastapi,False,False,11,Agent exceeded session timeout (8.0 min),484.8
+fastapi_15280,fastapi/fastapi,False,False,28,,223.5
+fastapi_15661,fastapi/fastapi,False,True,28,Agent exceeded session timeout (8.0 min),484.1
+fastapi_15785,fastapi/fastapi,False,False,28,,294.0
+fastapi_5624,fastapi/fastapi,False,True,27,Agent exceeded session timeout (8.0 min),488.4
+httpx_3672,encode/httpx,True,True,28,,336.0
+requests_6589,psf/requests,True,True,25,,234.2
+requests_6644,psf/requests,True,True,11,,184.0
+requests_7309,psf/requests,True,True,15,,109.6
+requests_7427,psf/requests,True,True,17,,365.2
+rich_2725,Textualize/rich,True,True,25,,484.6
+rich_3043,Textualize/rich,True,True,14,,159.8
+rich_3063,Textualize/rich,False,False,11,Agent exceeded session timeout (8.0 min),483.3
+rich_3105,Textualize/rich,False,True,28,,286.9
+rich_3278,Textualize/rich,True,True,24,,426.9
+rich_3468,Textualize/rich,False,True,19,,383.1
+rich_3471,Textualize/rich,False,False,23,Agent exceeded session timeout (8.0 min),483.4
+rich_3506,Textualize/rich,False,False,8,Agent exceeded session timeout (8.0 min),481.8
+rich_3675,Textualize/rich,False,True,22,,197.1
+rich_3772,Textualize/rich,False,True,22,,590.5
+rich_3882,Textualize/rich,True,True,24,,94.2
+rich_3930,Textualize/rich,False,True,28,,381.4
+rich_3938,Textualize/rich,False,False,28,,231.9
+rich_3953,Textualize/rich,False,True,10,,415.0
+rich_4075,Textualize/rich,False,False,28,,257.5

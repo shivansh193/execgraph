@@ -1,0 +1,45 @@
+{
+ "id": "e3-hinted-control-v1",
+ "written": "2026-11-10, before any E3 run",
+ "agent": "baseline agent without the ExecGraph skill (experiments/configs/base, hash 958ba110baa2), budget 8 min / 28 calls",
+ "tasks": "the 41-task repo-proportional dev subset used for every earlier dev run (dev_eval N_TASKS=40)",
+ "models": [
+  "gemma-4-e4b-it-qat-w4a16-ct",
+  "gemma-4-12b-it-qat-w4a16-ct",
+  "gemma-4-31b-it-qat-w4a16-ct"
+ ],
+ "arms": {
+  "none": "issue text only",
+  "rwg": "issue + top-5 functions from rwg_ppr at level R (deployable: no gold tests), parameters frozen from the E1 tune split",
+  "goldfile": "issue + the non-test files the gold patch edits (oracle localisation upper bound)"
+ },
+ "metric": "resolved per task (scorer-like verification); paired comparison per model, exact McNemar test on discordant tasks, and the difference with a paired bootstrap CI",
+ "hypotheses": {
+  "H5": "goldfile > none for 31B",
+  "H6": "rwg > none for 31B",
+  "H7": "goldfile - none is smaller for E4B than for 31B (localisation is less of the bottleneck for the small model)",
+  "H8": "rwg > none for E4B"
+ },
+ "secondary": [
+  "step of first edit",
+  "whether the agent edits a gold file",
+  "tool-call errors by class (E4 taxonomy)"
+ ],
+ "notes": "temperature 0.2 sampling: run-to-run noise on 41 tasks was +/-1-2 tasks for E4B; results within that are reported as null.",
+ "amendments": [
+  {
+   "written": "2026-11-10, after E1 eval results, before any rwg-hint E3 run",
+   "change": "add arm rwgF: issue + top-5 functions from rwg_ppr with the task's failing-test trace (frozen paper/rwg_params.json). It uses the gold tests, so it is an oracle-evidence arm next to goldfile: function-level localisation from a trace vs file-level from the patch. Arm rwg (level R) unchanged. Hints: experiments/e3/hints_rwg_F.json, hints_rwg_R.json.",
+   "hypotheses": {
+    "H9": "rwgF > none for 31B",
+    "H10": "rwgF >= goldfile for 31B (function-level trace localisation is at least as useful as knowing the files)"
+   },
+   "reason": "E1 found level R gives no localisation gain over text (H1 failed), so the rwg arm is expected to be close to none; rwgF tests whether the localiser's best evidence level helps the agent."
+  },
+  {
+   "written": "2026-11-10 17:10 IST, before any rwgF or rwg E3 run started",
+   "change": "rwgF and rwg hints now come from RWG-PPR v2 (paper/rwg_params_v2.json: failure-message seeds w_fail=1, level-R passing tests as extra Ochiai contrast), designed on the E1 tune split. Held-out E1 (exploratory second look): v2 hit@5 0.771 vs v1 0.643 on 70 eval tasks.",
+   "reason": "use the best localiser available before the agent arms run; no E3 rwg result existed at the time."
+  }
+ ]
+}

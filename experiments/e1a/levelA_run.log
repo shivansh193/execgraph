@@ -1,0 +1,20 @@
+[{"stream_name":"stdout","time":667.954384863,"data":"EG_DATA /kaggle/input/competitions/gemma-4-developer-agent E1 /kaggle/input/notebooks/shivanshkalra/gda-e1-localisation/e1 E1A /kaggle/input/gda-e1a-agent/e1\n"}
+,{"stream_name":"stdout","time":667.954456905,"data":"$ OUT_A=level_a_rows.json python notebooks/e1/level_a.py\n"}
+,{"stream_name":"stdout","time":719.618873488,"data":"repro outcomes on buggy code: {'no_failing_test': 20, 'repro_fails': 26, 'no_gold_in_graph': 2, 'collection_error': 7}\n"}
+,{"stream_name":"stdout","time":719.618935826,"data":"scored repros: 24 over 20 tasks; gold function executed by the agent's failing repro: 12/24\n"}
+,{"stream_name":"stdout","time":719.618943511,"data":"text {'hit@1': 0.458, 'hit@5': 0.583, 'hit@10': 0.625, 'mrr': 0.527}\n"}
+,{"stream_name":"stdout","time":719.618950257,"data":"A_no_failure_seeds {'hit@1': 0.458, 'hit@5': 0.667, 'hit@10': 0.708, 'mrr': 0.546}\n"}
+,{"stream_name":"stdout","time":719.61895694,"data":"A {'hit@1': 0.458, 'hit@5': 0.708, 'hit@10': 0.708, 'mrr': 0.564}\n"}
+,{"stream_name":"stdout","time":719.618963794,"data":"[21 repros whose task also has F] text {'hit@1': 0.524, 'hit@5': 0.667, 'mrr': 0.599}\n"}
+,{"stream_name":"stdout","time":719.61897042,"data":"[21 repros whose task also has F] A {'hit@1': 0.524, 'hit@5': 0.81, 'mrr': 0.642}\n"}
+,{"stream_name":"stdout","time":719.618977132,"data":"[21 repros whose task also has F] F {'hit@1': 0.762, 'hit@5': 0.952, 'mrr': 0.847}\n"}
+,{"stream_name":"stdout","time":719.618983492,"data":"A - text hit@5 n=24: +0.125 [+0.000,+0.292] P\u003c=0 0.037\n"}
+,{"stream_name":"stdout","time":719.618990042,"data":"F - A hit@5 n=21: +0.143 [-0.048,+0.333] P\u003c=0 0.122\n"}
+,{"stream_name":"stdout","time":719.662262154,"data":"exit 0\n"}
+,{"stream_name":"stderr","time":722.62080318,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":722.620844481,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":723.018641375,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":723.018673906,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":724.248577186,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":725.690715149,"data":"[NbConvertApp] Writing 503945 bytes to __results__.html\n"}
+]

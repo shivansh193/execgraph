@@ -1,0 +1,42 @@
+instance_id,repo,resolved,has_patch,tool_calls,error,seconds
+fastapi_11194,fastapi/fastapi,False,False,28,,378.4
+fastapi_13207,fastapi/fastapi,True,True,28,,398.5
+fastapi_13786,fastapi/fastapi,False,True,28,,366.5
+fastapi_14099,fastapi/fastapi,False,False,27,,374.9
+fastapi_14262,fastapi/fastapi,False,True,19,Agent exceeded session timeout (8.0 min),491.0
+fastapi_14301,fastapi/fastapi,True,True,28,,295.3
+fastapi_14349,fastapi/fastapi,True,True,28,,408.6
+fastapi_14371,fastapi/fastapi,False,True,23,,228.8
+fastapi_14430,fastapi/fastapi,False,True,27,,438.8
+fastapi_14458,fastapi/fastapi,True,True,21,,376.0
+fastapi_14479,fastapi/fastapi,False,True,22,,161.9
+fastapi_14487,fastapi/fastapi,False,True,28,,259.0
+fastapi_14583,fastapi/fastapi,False,True,28,,381.6
+fastapi_14616,fastapi/fastapi,False,True,28,,406.9
+fastapi_14851,fastapi/fastapi,True,False,28,,147.6
+fastapi_14962,fastapi/fastapi,False,True,27,,416.9
+fastapi_14986,fastapi/fastapi,False,True,25,,436.9
+fastapi_15280,fastapi/fastapi,False,False,28,,290.7
+fastapi_15661,fastapi/fastapi,False,True,25,,349.4
+fastapi_15785,fastapi/fastapi,False,False,28,,187.3
+fastapi_5624,fastapi/fastapi,False,False,20,Agent exceeded session timeout (8.0 min),486.5
+httpx_3672,encode/httpx,True,True,21,,493.8
+requests_6589,psf/requests,True,True,25,,307.2
+requests_6644,psf/requests,True,True,18,,139.3
+requests_7309,psf/requests,True,True,25,,226.4
+requests_7427,psf/requests,True,True,9,,217.5
+rich_2725,Textualize/rich,True,True,28,,325.7
+rich_3043,Textualize/rich,True,True,22,,319.7
+rich_3063,Textualize/rich,False,True,28,,413.2
+rich_3105,Textualize/rich,False,False,28,,302.2
+rich_3278,Textualize/rich,False,False,28,,338.9
+rich_3468,Textualize/rich,False,False,17,Agent exceeded session timeout (8.0 min),483.8
+rich_3471,Textualize/rich,False,True,22,,239.0
+rich_3506,Textualize/rich,True,True,15,,366.2
+rich_3675,Textualize/rich,False,True,24,,218.8
+rich_3772,Textualize/rich,False,True,28,,517.4
+rich_3882,Textualize/rich,True,True,20,,131.3
+rich_3930,Textualize/rich,False,True,28,,468.9
+rich_3938,Textualize/rich,False,False,28,,288.9
+rich_3953,Textualize/rich,False,True,20,,392.1
+rich_4075,Textualize/rich,False,False,28,,183.5

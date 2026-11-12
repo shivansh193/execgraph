@@ -1,0 +1,33 @@
+{
+  "run_tag": "e3-31b-none-958ba110baa2",
+  "model": "gemma-4-31b-it-qat-w4a16-ct",
+  "budget": {
+    "timeout_seconds": 240,
+    "max_tool_calls": 28,
+    "max_time_minutes": 8,
+    "max_turns": 80
+  },
+  "n": 41,
+  "resolved": 14,
+  "rate": 0.3415,
+  "with_patch": 30,
+  "wall_minutes": 227.6,
+  "by_repo": {
+    "Textualize/rich": {
+      "sum": 4,
+      "count": 15
+    },
+    "encode/httpx": {
+      "sum": 1,
+      "count": 1
+    },
+    "fastapi/fastapi": {
+      "sum": 5,
+      "count": 21
+    },
+    "psf/requests": {
+      "sum": 4,
+      "count": 4
+    }
+  }
+}

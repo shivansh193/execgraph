@@ -1,0 +1,42 @@
+instance_id,repo,resolved,has_patch,tool_calls,error,seconds
+fastapi_11194,fastapi/fastapi,False,False,28,,383.3
+fastapi_13207,fastapi/fastapi,False,False,28,,216.5
+fastapi_13786,fastapi/fastapi,False,True,25,Agent exceeded session timeout (8.0 min),491.2
+fastapi_14099,fastapi/fastapi,False,True,28,,350.5
+fastapi_14262,fastapi/fastapi,False,True,28,,200.7
+fastapi_14301,fastapi/fastapi,True,True,23,,180.7
+fastapi_14349,fastapi/fastapi,True,True,19,,329.3
+fastapi_14371,fastapi/fastapi,False,True,28,,390.4
+fastapi_14430,fastapi/fastapi,True,True,28,,200.1
+fastapi_14458,fastapi/fastapi,True,True,25,,277.1
+fastapi_14479,fastapi/fastapi,False,True,10,,88.4
+fastapi_14487,fastapi/fastapi,False,True,28,,263.6
+fastapi_14583,fastapi/fastapi,False,True,28,,356.2
+fastapi_14616,fastapi/fastapi,False,False,28,,273.5
+fastapi_14851,fastapi/fastapi,False,False,28,Agent exceeded tool call budget (28 calls),136.8
+fastapi_14962,fastapi/fastapi,False,True,28,,414.5
+fastapi_14986,fastapi/fastapi,False,True,28,,428.5
+fastapi_15280,fastapi/fastapi,False,False,28,Agent exceeded turns budget (80 turns),276.7
+fastapi_15661,fastapi/fastapi,False,True,28,Agent exceeded session timeout (8.0 min),484.1
+fastapi_15785,fastapi/fastapi,False,True,28,,472.7
+fastapi_5624,fastapi/fastapi,False,False,25,Agent exceeded session timeout (8.0 min),485.9
+httpx_3672,encode/httpx,True,True,27,,365.5
+requests_6589,psf/requests,True,True,26,,255.9
+requests_6644,psf/requests,True,True,28,,271.7
+requests_7309,psf/requests,True,True,22,,137.3
+requests_7427,psf/requests,True,True,12,,204.6
+rich_2725,Textualize/rich,True,True,21,,334.3
+rich_3043,Textualize/rich,True,True,23,,268.4
+rich_3063,Textualize/rich,False,True,21,Agent exceeded session timeout (8.0 min),483.9
+rich_3105,Textualize/rich,False,False,28,,202.9
+rich_3278,Textualize/rich,True,True,27,,484.8
+rich_3468,Textualize/rich,False,True,27,,397.9
+rich_3471,Textualize/rich,False,True,23,,204.5
+rich_3506,Textualize/rich,True,True,10,,452.4
+rich_3675,Textualize/rich,False,True,23,,177.6
+rich_3772,Textualize/rich,False,True,27,,593.5
+rich_3882,Textualize/rich,True,True,18,,90.6
+rich_3930,Textualize/rich,False,True,28,,442.3
+rich_3938,Textualize/rich,False,True,28,Agent exceeded turns budget (80 turns),425.3
+rich_3953,Textualize/rich,False,False,8,Agent exceeded session timeout (8.0 min),483.1
+rich_4075,Textualize/rich,False,False,28,,173.1

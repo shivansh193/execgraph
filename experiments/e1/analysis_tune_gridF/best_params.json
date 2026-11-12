@@ -1,0 +1,15 @@
+{
+ "w_static": 1.0,
+ "w_ast": 1.0,
+ "w_runtime": 3.0,
+ "w_sem": 2.0,
+ "sem_k": 5,
+ "sem_min": 0.5,
+ "reverse": 0.3,
+ "alpha": 0.3,
+ "mix": 0.3,
+ "exact_bonus": 1.0,
+ "spectrum": true,
+ "iters": 50,
+ "pseudo_top": 3
+}

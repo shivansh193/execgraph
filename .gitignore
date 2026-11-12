@@ -1,0 +1,14 @@
+data/
+*.zip
+.kaggle/
+kaggle.json
+access_token
+__pycache__/
+*.pyc
+.venv/
+notebooks/dev_eval/build/
+.scratch/
+notebooks/submit/build/
+notebooks/e1/build/
+notebooks/e3/build/
+notebooks/remote/build/

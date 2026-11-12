@@ -1,0 +1,10 @@
+[project]
+name = "execgraph"
+version = "0.1.0"
+description = "Runtime evidence on competition-format code graphs for bug localisation (RWG-PPR)"
+requires-python = ">=3.10"
+dependencies = ["numpy"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
